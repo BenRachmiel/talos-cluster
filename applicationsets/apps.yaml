@@ -32,6 +32,13 @@ spec:
       destination:
         server: https://kubernetes.default.svc
         namespace: "{{ .targetNamespace }}"
+      ignoreDifferences:
+        - group: ""
+          kind: Secret
+          jsonPointers:
+            - /data
+            - /stringData
       syncPolicy:
         syncOptions:
           - ServerSideApply=true
+          - RespectIgnoreDifferences=true

@@ -20,17 +20,6 @@ configs:
       g, BenRachmiel, role:admin
     policy.default: role:readonly
     scopes: '[preferred_username]'
-  resourceExclusions: |
-    - apiGroups:
-        - ""
-      kinds:
-        - Secret
-      clusters:
-        - "*"
-      names:
-        - cilium-ca
-        - hubble-relay-client-certs
-        - hubble-server-certs
   params:
     server.insecure: true
 
