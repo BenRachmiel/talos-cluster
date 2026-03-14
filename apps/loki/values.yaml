@@ -55,3 +55,4 @@ loki:
     ingestion_burst_size_mb: 20
   compactor:
     retention_enabled: true
+    delete_request_store: filesystem
