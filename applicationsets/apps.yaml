@@ -32,4 +32,6 @@ spec:
       destination:
         server: https://kubernetes.default.svc
         namespace: "{{ .targetNamespace }}"
-      syncPolicy: {}
+      syncPolicy:
+        syncOptions:
+          - ServerSideApply=true
