@@ -40,11 +40,17 @@ extraObjects:
       data:
         - secretKey: dex.github.clientID
           remoteRef:
+            conversionStrategy: Default
+            decodingStrategy: None
             key: argocd/github-oauth
+            metadataPolicy: None
             property: clientID
         - secretKey: dex.github.clientSecret
           remoteRef:
+            conversionStrategy: Default
+            decodingStrategy: None
             key: argocd/github-oauth
+            metadataPolicy: None
             property: clientSecret
 
 controller:
