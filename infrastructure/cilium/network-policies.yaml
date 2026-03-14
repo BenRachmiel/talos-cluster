@@ -18,6 +18,10 @@ spec:
   ingress:
     - fromEntities:
         - cluster
+  egress:
+    - toEntities:
+        - cluster
+        - world
 ---
 # Policy 2: Allow external traffic to reach the Cilium Gateway (Envoy).
 # Without this, Policy 1's implicit deny blocks world → ingress.
