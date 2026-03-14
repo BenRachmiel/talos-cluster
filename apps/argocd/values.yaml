@@ -10,7 +10,7 @@ configs:
     oidc.config: |
       name: Dex
       issuer: https://dex.k8s.benrachmiel.org
-      clientID: argocd
+      clientID: argo-cd
       clientSecret: $oidc.dex.clientSecret
       requestedScopes:
         - openid

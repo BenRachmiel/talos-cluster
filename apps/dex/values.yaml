@@ -18,7 +18,7 @@ config:
         clientSecret: $GITHUB_CLIENT_SECRET
         redirectURI: https://dex.k8s.benrachmiel.org/callback
   staticClients:
-    - id: argocd
+    - id: argo-cd
       name: ArgoCD
       secret: $ARGOCD_CLIENT_SECRET
       redirectURIs:
