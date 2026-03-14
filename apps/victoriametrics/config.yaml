@@ -1,0 +1,5 @@
+name: victoriametrics
+repoURL: https://victoriametrics.github.io/helm-charts/
+chart: victoria-metrics-k8s-stack
+chartVersion: 0.72.4
+targetNamespace: monitoring

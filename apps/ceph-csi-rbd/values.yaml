@@ -13,8 +13,9 @@ csiConfig:
 storageClass:
   create: true
   name: ceph-rbd
+  isDefault: true
   clusterID: "5af27d00-f460-4759-bad6-b8f4d888ceec"
-  pool: nvme-pool
+  pool: hdd-pool
   reclaimPolicy: Retain
   allowVolumeExpansion: true
   mountOptions: []

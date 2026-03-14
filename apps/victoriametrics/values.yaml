@@ -1,7 +1,7 @@
 # VictoriaMetrics — storage + alerting only, Alloy handles all collection
 # Install with:
 #   helm repo add vm https://victoriametrics.github.io/helm-charts/
-#   helm install victoria vm/victoria-metrics-k8s-stack -n monitoring --create-namespace -f victoriametrics-values.yaml
+#   helm install victoria vm/victoria-metrics-k8s-stack -n monitoring --create-namespace -f values.yaml
 
 # --- VMSingle (storage + query) ---
 vmsingle:
@@ -9,7 +9,7 @@ vmsingle:
   spec:
     retentionPeriod: "14d"
     storage:
-      storageClassName: ""  # Update to your Ceph storageclass
+      storageClassName: ceph-rbd
       resources:
         requests:
           storage: 20Gi
@@ -51,7 +51,7 @@ grafana:
   enabled: true
   persistence:
     enabled: true
-    storageClassName: ""  # Update to your Ceph storageclass
+    storageClassName: ceph-rbd
     size: 5Gi
   resources:
     limits:
@@ -59,12 +59,25 @@ grafana:
     requests:
       cpu: 50m
       memory: 128Mi
+  grafana.ini:
+    server:
+      root_url: https://grafana.k8s.benrachmiel.org
+    auth.generic_oauth:
+      enabled: true
+      name: Dex
+      client_id: grafana
+      client_secret: ${GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET}
+      scopes: openid profile email
+      auth_url: https://dex.k8s.benrachmiel.org/auth
+      token_url: https://dex.k8s.benrachmiel.org/token
+      api_url: https://dex.k8s.benrachmiel.org/userinfo
+      allow_sign_up: true
+      use_refresh_token: true
+      role_attribute_path: "contains(preferred_username, 'BenRachmiel') && 'Admin' || 'Viewer'"
+    auth:
+      disable_login_form: true
+  envFromSecret: grafana-oidc-secret
   additionalDataSources:
-    - name: Hubble
-      type: prometheus
-      url: http://hubble-relay.kube-system.svc:80
-      access: proxy
-      isDefault: false
     - name: Loki
       type: loki
       url: http://loki-gateway.monitoring.svc:80
@@ -93,4 +106,40 @@ kube-state-metrics:
       cpu: 25m
       memory: 64Mi
 
-# No extraObjects needed — Alloy scrapes directly via prometheus.io annotations + static targets
+extraObjects:
+  - apiVersion: gateway.networking.k8s.io/v1
+    kind: HTTPRoute
+    metadata:
+      name: grafana
+      namespace: monitoring
+    spec:
+      parentRefs:
+        - name: main-gateway
+          namespace: kube-system
+      hostnames:
+        - "grafana.k8s.benrachmiel.org"
+      rules:
+        - backendRefs:
+            - name: victoriametrics-grafana
+              port: 80
+  - apiVersion: external-secrets.io/v1
+    kind: ExternalSecret
+    metadata:
+      name: grafana-oidc-secret
+      namespace: monitoring
+    spec:
+      refreshInterval: 1h
+      secretStoreRef:
+        kind: ClusterSecretStore
+        name: vault
+      target:
+        name: grafana-oidc-secret
+        creationPolicy: Owner
+      data:
+        - secretKey: GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET
+          remoteRef:
+            conversionStrategy: Default
+            decodingStrategy: None
+            key: dex/clients
+            metadataPolicy: None
+            property: grafana

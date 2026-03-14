@@ -1,0 +1,5 @@
+name: dex
+repoURL: https://charts.dexidp.io
+chart: dex
+chartVersion: 0.24.0
+targetNamespace: dex

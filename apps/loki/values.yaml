@@ -14,7 +14,7 @@ singleBinary:
       cpu: 100m
       memory: 256Mi
   persistence:
-    storageClass: ""  # Update to your Ceph storageclass
+    storageClass: ceph-rbd
     size: 20Gi
 
 # Disable components not needed in single-binary mode

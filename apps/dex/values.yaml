@@ -1,0 +1,100 @@
+# Dex — standalone OIDC provider for the cluster
+# Install with:
+#   helm repo add dex https://charts.dexidp.io
+#   helm install dex dex/dex -n dex --create-namespace -f values.yaml
+
+config:
+  issuer: https://dex.k8s.benrachmiel.org
+  storage:
+    type: kubernetes
+    config:
+      inCluster: true
+  connectors:
+    - type: github
+      id: github
+      name: GitHub
+      config:
+        clientID: $GITHUB_CLIENT_ID
+        clientSecret: $GITHUB_CLIENT_SECRET
+        redirectURI: https://dex.k8s.benrachmiel.org/callback
+  staticClients:
+    - id: argocd
+      name: ArgoCD
+      secret: $ARGOCD_CLIENT_SECRET
+      redirectURIs:
+        - https://argo.k8s.benrachmiel.org/auth/callback
+    - id: grafana
+      name: Grafana
+      secret: $GRAFANA_CLIENT_SECRET
+      redirectURIs:
+        - https://grafana.k8s.benrachmiel.org/login/generic_oauth
+
+envFrom:
+  - secretRef:
+      name: dex-secrets
+
+resources:
+  limits:
+    memory: 256Mi
+  requests:
+    cpu: 25m
+    memory: 128Mi
+
+extraObjects:
+  - apiVersion: gateway.networking.k8s.io/v1
+    kind: HTTPRoute
+    metadata:
+      name: dex
+      namespace: dex
+    spec:
+      parentRefs:
+        - name: main-gateway
+          namespace: kube-system
+      hostnames:
+        - "dex.k8s.benrachmiel.org"
+      rules:
+        - backendRefs:
+            - name: dex
+              port: 5556
+  - apiVersion: external-secrets.io/v1
+    kind: ExternalSecret
+    metadata:
+      name: dex-secrets
+      namespace: dex
+    spec:
+      refreshInterval: 1h
+      secretStoreRef:
+        kind: ClusterSecretStore
+        name: vault
+      target:
+        name: dex-secrets
+        creationPolicy: Owner
+      data:
+        - secretKey: GITHUB_CLIENT_ID
+          remoteRef:
+            conversionStrategy: Default
+            decodingStrategy: None
+            key: dex/github-oauth
+            metadataPolicy: None
+            property: clientID
+        - secretKey: GITHUB_CLIENT_SECRET
+          remoteRef:
+            conversionStrategy: Default
+            decodingStrategy: None
+            key: dex/github-oauth
+            metadataPolicy: None
+            property: clientSecret
+        - secretKey: ARGOCD_CLIENT_SECRET
+          remoteRef:
+            conversionStrategy: Default
+            decodingStrategy: None
+            key: dex/clients
+            metadataPolicy: None
+            property: argocd
+        - secretKey: GRAFANA_CLIENT_SECRET
+          remoteRef:
+            conversionStrategy: Default
+            decodingStrategy: None
+            key: dex/clients
+            metadataPolicy: None
+            property: grafana
