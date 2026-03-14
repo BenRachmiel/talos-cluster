@@ -15,11 +15,6 @@ configs:
           config:
             clientID: $dex.github.clientID
             clientSecret: $dex.github.clientSecret
-  rbac:
-    policy.csv: |
-      g, BenRachmiel, role:admin
-    policy.default: role:readonly
-    scopes: '[preferred_username]'
     resource.customizations.ignoreDifferences.gateway.networking.k8s.io_HTTPRoute: |
       jqPathExpressions:
         - .spec.parentRefs[]?.group
@@ -33,6 +28,11 @@ configs:
         - .spec.listeners[]?.allowedRoutes
         - .spec.listeners[]?.tls?.certificateRefs[]?.group
         - .spec.listeners[]?.tls?.certificateRefs[]?.kind
+  rbac:
+    policy.csv: |
+      g, BenRachmiel, role:admin
+    policy.default: role:readonly
+    scopes: '[preferred_username]'
   params:
     server.insecure: true
 
