@@ -105,20 +105,11 @@ extraObjects:
       namespace: kube-system
     spec:
       parentRefs:
-        - group: gateway.networking.k8s.io
-          kind: Gateway
-          name: main-gateway
+        - name: main-gateway
           namespace: default
       hostnames:
         - "hubble.k8s.benrachmiel.org"
       rules:
-        - matches:
-            - path:
-                type: PathPrefix
-                value: /
-          backendRefs:
-            - group: ""
-              kind: Service
-              name: hubble-ui
+        - backendRefs:
+            - name: hubble-ui
               port: 80
-              weight: 1

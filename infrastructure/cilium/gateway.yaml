@@ -6,7 +6,7 @@ apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
   name: main-gateway
-  namespace: default
+  namespace: kube-system
   annotations:
     io.cilium/lb-ipam-ips: "192.168.2.200"
     cert-manager.io/cluster-issuer: letsencrypt-prod

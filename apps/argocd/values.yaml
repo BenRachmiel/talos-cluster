@@ -20,6 +20,17 @@ configs:
       g, BenRachmiel, role:admin
     policy.default: role:readonly
     scopes: '[preferred_username]'
+    resource.customizations.ignoreDifferences.gateway.networking.k8s.io_HTTPRoute: |
+      jqPathExpressions:
+        - .spec.parentRefs[]?.group
+        - .spec.parentRefs[]?.kind
+        - .spec.rules[]?.matches
+        - .spec.rules[]?.backendRefs[]?.group
+        - .spec.rules[]?.backendRefs[]?.kind
+        - .spec.rules[]?.backendRefs[]?.weight
+    resource.customizations.ignoreDifferences.gateway.networking.k8s.io_Gateway: |
+      jqPathExpressions:
+        - .spec.listeners[]?.allowedRoutes
   params:
     server.insecure: true
 
@@ -31,23 +42,14 @@ extraObjects:
       namespace: argocd
     spec:
       parentRefs:
-        - group: gateway.networking.k8s.io
-          kind: Gateway
-          name: main-gateway
-          namespace: default
+        - name: main-gateway
+          namespace: kube-system
       hostnames:
         - "argo.k8s.benrachmiel.org"
       rules:
-        - matches:
-            - path:
-                type: PathPrefix
-                value: /
-          backendRefs:
-            - group: ""
-              kind: Service
-              name: argocd-server
+        - backendRefs:
+            - name: argocd-server
               port: 80
-              weight: 1
   - apiVersion: external-secrets.io/v1
     kind: ExternalSecret
     metadata:
