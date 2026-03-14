@@ -20,12 +20,12 @@ config:
   staticClients:
     - id: argo-cd
       name: ArgoCD
-      secret: $ARGOCD_CLIENT_SECRET
+      secretEnv: ARGOCD_CLIENT_SECRET
       redirectURIs:
         - https://argo.k8s.benrachmiel.org/auth/callback
     - id: grafana
       name: Grafana
-      secret: $GRAFANA_CLIENT_SECRET
+      secretEnv: GRAFANA_CLIENT_SECRET
       redirectURIs:
         - https://grafana.k8s.benrachmiel.org/login/generic_oauth
 
