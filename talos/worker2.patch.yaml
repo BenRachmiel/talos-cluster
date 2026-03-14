@@ -1,0 +1,12 @@
+# Worker 2 (fat-man, GPU) — network config
+machine:
+  network:
+    interfaces:
+      - deviceSelector:
+          busPath: "0*"
+        dhcp: false
+        addresses:
+          - 192.168.2.94/16
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 192.168.1.1  # Update to your gateway

@@ -1,0 +1,21 @@
+# Additional patch for the GPU worker node — merge with worker.patch.yaml
+# Apply with: talosctl gen config ... --config-patch-worker @worker.patch.yaml --config-patch-worker @gpu-worker.patch.yaml
+# Or apply post-generation: talosctl machineconfig patch worker.yaml --patch @gpu-worker.patch.yaml
+
+machine:
+  install:
+    extensions:
+      - image: ghcr.io/siderolabs/qemu-guest-agent:latest
+      - image: ghcr.io/siderolabs/crun:latest
+      - image: ghcr.io/siderolabs/nvidia-container-toolkit:latest
+      - image: ghcr.io/siderolabs/nvidia-open-gpu-kernel-modules:latest
+
+  kernel:
+    modules:
+      - name: nvidia
+      - name: nvidia_uvm
+      - name: nvidia_drm
+      - name: nvidia_modeset
+
+  nodeLabels:
+    nvidia.com/gpu.present: "true"

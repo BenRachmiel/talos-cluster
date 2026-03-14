@@ -1,0 +1,15 @@
+# Baseline network policy — block ingress from outside the cluster
+# Inter-service traffic is open (trusted LAN, small team)
+---
+apiVersion: "cilium.io/v2"
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  name: deny-ingress-from-world
+spec:
+  endpointSelector: {}
+  ingressDeny:
+    - fromEntities:
+        - world
+  ingress:
+    - fromEntities:
+        - cluster

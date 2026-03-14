@@ -1,0 +1,33 @@
+# HTTPRoutes for monitoring UIs — add to your Gateway
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: grafana
+  namespace: monitoring
+spec:
+  parentRefs:
+    - name: main-gateway
+      namespace: default
+  hostnames:
+    - "grafana.example.com"  # Update to your domain
+  rules:
+    - backendRefs:
+        - name: victoria-grafana
+          port: 80
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: vmui
+  namespace: monitoring
+spec:
+  parentRefs:
+    - name: main-gateway
+      namespace: default
+  hostnames:
+    - "vmui.example.com"  # Update to your domain
+  rules:
+    - backendRefs:
+        - name: victoria-vmsingle
+          port: 8429

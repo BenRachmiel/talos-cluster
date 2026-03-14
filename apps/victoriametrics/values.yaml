@@ -1,0 +1,96 @@
+# VictoriaMetrics — storage + alerting only, Alloy handles all collection
+# Install with:
+#   helm repo add vm https://victoriametrics.github.io/helm-charts/
+#   helm install victoria vm/victoria-metrics-k8s-stack -n monitoring --create-namespace -f victoriametrics-values.yaml
+
+# --- VMSingle (storage + query) ---
+vmsingle:
+  enabled: true
+  spec:
+    retentionPeriod: "14d"
+    storage:
+      storageClassName: ""  # Update to your Ceph storageclass
+      resources:
+        requests:
+          storage: 20Gi
+    resources:
+      limits:
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+
+# --- VMAgent disabled — Alloy handles metric collection ---
+vmagent:
+  enabled: false
+
+# --- VMAlert (alerting rules evaluation) ---
+vmalert:
+  enabled: true
+  spec:
+    resources:
+      limits:
+        memory: 128Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+
+# --- Alertmanager ---
+alertmanager:
+  enabled: true
+  spec:
+    resources:
+      limits:
+        memory: 128Mi
+      requests:
+        cpu: 25m
+        memory: 64Mi
+
+# --- Grafana ---
+grafana:
+  enabled: true
+  persistence:
+    enabled: true
+    storageClassName: ""  # Update to your Ceph storageclass
+    size: 5Gi
+  resources:
+    limits:
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+  additionalDataSources:
+    - name: Hubble
+      type: prometheus
+      url: http://hubble-relay.kube-system.svc:80
+      access: proxy
+      isDefault: false
+    - name: Loki
+      type: loki
+      url: http://loki-gateway.monitoring.svc:80
+      access: proxy
+      isDefault: false
+
+# --- Disable bundled components replaced by Alloy ---
+prometheus:
+  enabled: false
+
+prometheus-node-exporter:
+  enabled: true
+  resources:
+    limits:
+      memory: 64Mi
+    requests:
+      cpu: 25m
+      memory: 32Mi
+
+kube-state-metrics:
+  enabled: true
+  resources:
+    limits:
+      memory: 128Mi
+    requests:
+      cpu: 25m
+      memory: 64Mi
+
+# No extraObjects needed — Alloy scrapes directly via prometheus.io annotations + static targets

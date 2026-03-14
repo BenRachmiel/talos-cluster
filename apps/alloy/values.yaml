@@ -1,0 +1,204 @@
+# Grafana Alloy — unified collector for metrics + logs
+# Install with:
+#   helm repo add grafana https://grafana.github.io/helm-charts
+#   helm install alloy grafana/alloy -n monitoring --create-namespace -f alloy-values.yaml
+
+alloy:
+  configMap:
+    content: |
+      // ============================================================
+      // METRICS — scrape and remote_write to VictoriaMetrics
+      // ============================================================
+
+      // Discover and scrape pods with prometheus.io annotations
+      discovery.kubernetes "pods" {
+        role = "pod"
+      }
+
+      discovery.relabel "pod_metrics" {
+        targets = discovery.kubernetes.pods.targets
+
+        rule {
+          source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_scrape"]
+          regex         = "true"
+          action        = "keep"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_path"]
+          target_label  = "__metrics_path__"
+          regex         = "(.+)"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_port", "__meta_kubernetes_pod_ip"]
+          regex         = "(\\d+);(.*)"
+          target_label  = "__address__"
+          replacement   = "$2:$1"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          target_label  = "namespace"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label  = "pod"
+        }
+      }
+
+      prometheus.scrape "pod_metrics" {
+        targets    = discovery.relabel.pod_metrics.output
+        forward_to = [prometheus.remote_write.victoriametrics.receiver]
+      }
+
+      // Scrape kubelets
+      discovery.kubernetes "nodes" {
+        role = "node"
+      }
+
+      prometheus.scrape "kubelet" {
+        targets    = discovery.kubernetes.nodes.targets
+        scheme     = "https"
+        tls_config {
+          insecure_skip_verify = true
+        }
+        bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+        forward_to = [prometheus.remote_write.victoriametrics.receiver]
+      }
+
+      // Scrape cAdvisor
+      discovery.relabel "cadvisor" {
+        targets = discovery.kubernetes.nodes.targets
+        rule {
+          replacement  = "/metrics/cadvisor"
+          target_label = "__metrics_path__"
+        }
+      }
+
+      prometheus.scrape "cadvisor" {
+        targets    = discovery.relabel.cadvisor.output
+        scheme     = "https"
+        tls_config {
+          insecure_skip_verify = true
+        }
+        bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+        forward_to = [prometheus.remote_write.victoriametrics.receiver]
+      }
+
+      // Scrape Cilium agent metrics
+      discovery.kubernetes "cilium" {
+        role = "pod"
+        namespaces {
+          names = ["kube-system"]
+        }
+        selectors {
+          role  = "pod"
+          label = "app.kubernetes.io/name=cilium-agent"
+        }
+      }
+
+      prometheus.scrape "cilium" {
+        targets    = discovery.kubernetes.cilium.targets
+        forward_to = [prometheus.remote_write.victoriametrics.receiver]
+      }
+
+      // Scrape Hubble metrics
+      discovery.kubernetes "hubble" {
+        role = "pod"
+        namespaces {
+          names = ["kube-system"]
+        }
+        selectors {
+          role  = "pod"
+          label = "app.kubernetes.io/name=hubble"
+        }
+      }
+
+      prometheus.scrape "hubble" {
+        targets    = discovery.kubernetes.hubble.targets
+        forward_to = [prometheus.remote_write.victoriametrics.receiver]
+      }
+
+      // Remote write to VictoriaMetrics
+      prometheus.remote_write "victoriametrics" {
+        endpoint {
+          url = "http://victoria-vmsingle.monitoring.svc:8429/api/v1/write"
+        }
+      }
+
+      // ============================================================
+      // LOGS — collect from all pods and push to Loki
+      // ============================================================
+
+      // Discover pod logs
+      discovery.kubernetes "pod_logs" {
+        role = "pod"
+      }
+
+      discovery.relabel "pod_logs" {
+        targets = discovery.kubernetes.pod_logs.targets
+
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          target_label  = "namespace"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label  = "pod"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_name"]
+          target_label  = "container"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_node_name"]
+          target_label  = "node"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+          target_label  = "app"
+        }
+      }
+
+      loki.source.kubernetes "pod_logs" {
+        targets    = discovery.relabel.pod_logs.output
+        forward_to = [loki.process.pipeline.receiver]
+      }
+
+      // Basic log processing — drop empty lines, parse JSON if present
+      loki.process "pipeline" {
+        stage.drop {
+          expression = "^\\s*$"
+        }
+        stage.json {
+          expressions = {
+            level   = "level",
+            msg     = "msg",
+            message = "message",
+          }
+          drop_malformed = true
+        }
+        stage.label_allow {
+          values = ["level"]
+        }
+        forward_to = [loki.write.loki.receiver]
+      }
+
+      loki.write "loki" {
+        endpoint {
+          url = "http://loki-gateway.monitoring.svc:80/loki/api/v1/push"
+        }
+      }
+
+controller:
+  type: daemonset
+  resources:
+    limits:
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+
+serviceAccount:
+  create: true
+
+rbac:
+  create: true

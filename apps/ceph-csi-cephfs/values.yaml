@@ -1,0 +1,40 @@
+# ceph-csi-cephfs — CephFS CSI driver for shared filesystem (music, media)
+# Install with:
+#   helm install ceph-csi-cephfs ceph-csi/ceph-csi-cephfs -n ceph-csi-cephfs --create-namespace -f ceph-csi-cephfs-values.yaml
+# Note: separate namespace from ceph-csi-rbd to avoid ConfigMap ownership conflicts
+
+csiConfig:
+  - clusterID: "5af27d00-f460-4759-bad6-b8f4d888ceec"
+    monitors:
+      - "192.168.1.2:6789"
+      - "192.168.1.3:6789"
+      - "192.168.1.4:6789"
+
+storageClass:
+  create: true
+  name: cephfs
+  clusterID: "5af27d00-f460-4759-bad6-b8f4d888ceec"
+  fsName: cephfs
+  reclaimPolicy: Retain
+  allowVolumeExpansion: true
+
+secret:
+  create: false
+  name: csi-cephfs-secret
+
+provisioner:
+  replicaCount: 1
+  resources:
+    limits:
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+
+nodeplugin:
+  resources:
+    limits:
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi

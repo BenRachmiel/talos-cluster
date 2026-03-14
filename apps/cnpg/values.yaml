@@ -1,0 +1,10 @@
+# CloudNativePG operator
+# Install with:
+#   helm install cnpg cnpg/cloudnative-pg -n cnpg-system --create-namespace -f cnpg-values.yaml
+
+resources:
+  limits:
+    memory: 256Mi
+  requests:
+    cpu: 50m
+    memory: 128Mi

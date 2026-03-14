@@ -1,0 +1,35 @@
+# Talos worker machine config patch
+# Apply with: talosctl gen config ... --config-patch-worker @worker.patch.yaml
+
+machine:
+  install:
+    disk: /dev/sda
+    image: factory.talos.dev/installer-secureboot/3a7f14795e9b2a1f5d931d878a2262bd4eb0b7f6ab95816bb9dce1bac7a6845e:v1.12.5
+    wipe: false
+
+  # Network is set per-node via separate patches:
+  #   worker0.patch.yaml, worker1.patch.yaml, worker2.patch.yaml
+
+  # crun as default OCI runtime (extension auto-registers it, we just set it as default)
+  files:
+    - content: |
+        [plugins."io.containerd.cri.v1.runtime".containerd]
+          default_runtime_name = "crun"
+      path: /etc/cri/conf.d/20-customization.part
+      op: create
+
+  sysctls:
+    net.core.somaxconn: "65535"
+    net.ipv4.ip_forward: "1"
+    vm.max_map_count: "262144"
+
+  features:
+    hostDNS:
+      enabled: true
+      forwardKubeDNSToHost: false
+
+  kubelet:
+    extraArgs:
+      rotate-server-certificates: true
+      image-gc-high-threshold: "70"
+      image-gc-low-threshold: "50"
