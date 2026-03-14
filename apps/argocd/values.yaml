@@ -31,6 +31,8 @@ configs:
     resource.customizations.ignoreDifferences.gateway.networking.k8s.io_Gateway: |
       jqPathExpressions:
         - .spec.listeners[]?.allowedRoutes
+        - .spec.listeners[]?.tls?.certificateRefs[]?.group
+        - .spec.listeners[]?.tls?.certificateRefs[]?.kind
   params:
     server.insecure: true
 
