@@ -176,8 +176,10 @@ alloy:
           }
           drop_malformed = true
         }
-        stage.label_allow {
-          values = ["level"]
+        stage.labels {
+          values = {
+            level = "",
+          }
         }
         forward_to = [loki.write.loki.receiver]
       }
