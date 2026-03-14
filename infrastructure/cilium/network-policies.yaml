@@ -1,15 +1,51 @@
-# Baseline network policy — block ingress from outside the cluster
-# Inter-service traffic is open (trusted LAN, small team)
+# Baseline network policies for Gateway API + eBPF datapath
+#
+# Traffic flow: world → reserved:ingress (Envoy) → backend pods
+# Two enforcement points: (world→ingress) and (ingress→backend)
+#
+# Uses allowlist-only (no ingressDeny) — Cilium implicitly denies
+# anything not explicitly allowed when any policy selects an endpoint.
+# ingressDeny takes absolute precedence and cannot be overridden.
 ---
+# Policy 1: All workload pods only accept traffic from within the cluster.
+# Implicitly denies world → pod (since world is not cluster).
 apiVersion: cilium.io/v2
 kind: CiliumClusterwideNetworkPolicy
 metadata:
-  name: deny-ingress-from-world
+  name: external-lockdown
 spec:
   endpointSelector: {}
-  ingressDeny:
-    - fromEntities:
-        - world
   ingress:
     - fromEntities:
+        - cluster
+---
+# Policy 2: Allow external traffic to reach the Cilium Gateway (Envoy).
+# Without this, Policy 1's implicit deny blocks world → ingress.
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  name: allow-world-to-gateway
+spec:
+  endpointSelector:
+    matchExpressions:
+      - key: reserved:ingress
+        operator: Exists
+  ingress:
+    - fromEntities:
+        - world
+---
+# Policy 3: Allow the Gateway proxy to forward to backend pods.
+# After Envoy processes the request, traffic exits with reserved:ingress
+# identity. This permits that egress.
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  name: allow-gateway-to-backends
+spec:
+  endpointSelector:
+    matchExpressions:
+      - key: reserved:ingress
+        operator: Exists
+  egress:
+    - toEntities:
         - cluster
