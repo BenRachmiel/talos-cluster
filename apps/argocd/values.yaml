@@ -78,10 +78,10 @@ extraObjects:
 controller:
   resources:
     limits:
-      memory: 512Mi
+      memory: 1Gi
     requests:
       cpu: 100m
-      memory: 256Mi
+      memory: 512Mi
 
 server:
   resources:
