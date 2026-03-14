@@ -120,7 +120,7 @@ extraObjects:
         - "grafana.k8s.benrachmiel.org"
       rules:
         - backendRefs:
-            - name: victoriametrics-grafana
+            - name: vm-stack-grafana
               port: 80
   - apiVersion: external-secrets.io/v1
     kind: ExternalSecret
