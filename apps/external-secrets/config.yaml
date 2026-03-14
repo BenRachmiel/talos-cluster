@@ -1,0 +1,5 @@
+name: external-secrets
+repoURL: https://charts.external-secrets.io
+chart: external-secrets
+chartVersion: 2.1.0
+targetNamespace: external-secrets

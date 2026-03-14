@@ -1,0 +1,5 @@
+name: ceph-csi-cephfs
+repoURL: https://ceph.github.io/csi-charts
+chart: ceph-csi-cephfs
+chartVersion: 3.16.2
+targetNamespace: ceph-csi-cephfs

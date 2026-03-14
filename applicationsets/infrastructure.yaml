@@ -1,0 +1,28 @@
+# ApplicationSet — raw manifests from infrastructure/*/
+# Each subdirectory becomes a separate Application
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: infrastructure
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - git:
+        repoURL: https://github.com/BenRachmiel/talos-cluster.git
+        revision: main
+        directories:
+          - path: "infrastructure/*"
+  template:
+    metadata:
+      name: "infra-{{ .path.basename }}"
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/BenRachmiel/talos-cluster.git
+        targetRevision: main
+        path: "{{ .path.path }}"
+      destination:
+        server: https://kubernetes.default.svc
+      syncPolicy: {}

@@ -1,0 +1,35 @@
+# ApplicationSet — auto-discovers Helm apps from apps/*/config.yaml
+# Each app folder needs: config.yaml (chart metadata) + values.yaml (Helm values)
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: apps
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - git:
+        repoURL: https://github.com/BenRachmiel/talos-cluster.git
+        revision: main
+        files:
+          - path: "apps/*/config.yaml"
+  template:
+    metadata:
+      name: "{{ .name }}"
+    spec:
+      project: default
+      sources:
+        - repoURL: "{{ .repoURL }}"
+          chart: "{{ .chart }}"
+          targetRevision: "{{ .chartVersion }}"
+          helm:
+            valueFiles:
+              - "$values/apps/{{ .name }}/values.yaml"
+        - repoURL: https://github.com/BenRachmiel/talos-cluster.git
+          targetRevision: main
+          ref: values
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{ .targetNamespace }}"
+      syncPolicy: {}
