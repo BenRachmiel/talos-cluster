@@ -1,55 +1,14 @@
-# Grafana Alloy — unified collector for metrics + logs
-# Install with:
-#   helm repo add grafana https://grafana.github.io/helm-charts
-#   helm install alloy grafana/alloy -n monitoring --create-namespace -f alloy-values.yaml
+# Grafana Alloy (DaemonSet) — node-local metrics + logs
+# Handles: kubelet, cAdvisor, node-exporter, Cilium agent, Hubble metrics, pod logs
 
 alloy:
   configMap:
     content: |
       // ============================================================
-      // METRICS — scrape and remote_write to VictoriaMetrics
+      // NODE-LOCAL METRICS — kubelet, cAdvisor, node-exporter, Cilium
       // ============================================================
 
-      // Discover and scrape pods with prometheus.io annotations
-      discovery.kubernetes "pods" {
-        role = "pod"
-      }
-
-      discovery.relabel "pod_metrics" {
-        targets = discovery.kubernetes.pods.targets
-
-        rule {
-          source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_scrape"]
-          regex         = "true"
-          action        = "keep"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_path"]
-          target_label  = "__metrics_path__"
-          regex         = "(.+)"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_port", "__meta_kubernetes_pod_ip"]
-          regex         = "(\\d+);(.*)"
-          target_label  = "__address__"
-          replacement   = "$2:$1"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_namespace"]
-          target_label  = "namespace"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_pod_name"]
-          target_label  = "pod"
-        }
-      }
-
-      prometheus.scrape "pod_metrics" {
-        targets    = discovery.relabel.pod_metrics.output
-        forward_to = [prometheus.remote_write.victoriametrics.receiver]
-      }
-
-      // Scrape kubelets
+      // Discover nodes (for kubelet + cAdvisor)
       discovery.kubernetes "nodes" {
         role = "node"
       }
@@ -64,7 +23,6 @@ alloy:
         forward_to = [prometheus.remote_write.victoriametrics.receiver]
       }
 
-      // Scrape cAdvisor
       discovery.relabel "cadvisor" {
         targets = discovery.kubernetes.nodes.targets
         rule {
@@ -83,41 +41,107 @@ alloy:
         forward_to = [prometheus.remote_write.victoriametrics.receiver]
       }
 
-      // Scrape Cilium agent metrics
-      discovery.kubernetes "cilium" {
+      // Discover local pods only (node-exporter, Cilium agent)
+      discovery.kubernetes "local_pods" {
         role = "pod"
-        namespaces {
-          names = ["kube-system"]
-        }
         selectors {
           role  = "pod"
-          label = "app.kubernetes.io/name=cilium-agent"
+          field = "spec.nodeName=" + sys.env("HOSTNAME")
+        }
+      }
+
+      // Node-exporter (via prometheus.io annotations)
+      discovery.relabel "node_exporter" {
+        targets = discovery.kubernetes.local_pods.targets
+
+        rule {
+          source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_scrape"]
+          regex         = "true"
+          action        = "keep"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+          regex         = "prometheus-node-exporter"
+          action        = "keep"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_port", "__meta_kubernetes_pod_ip"]
+          regex         = "(\\d+);(.*)"
+          target_label  = "__address__"
+          replacement   = "$2:$1"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          target_label  = "namespace"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label  = "pod"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_node_name"]
+          target_label  = "node"
+        }
+      }
+
+      prometheus.scrape "node_exporter" {
+        targets    = discovery.relabel.node_exporter.output
+        forward_to = [prometheus.remote_write.victoriametrics.receiver]
+      }
+
+      // Cilium agent (local pod on each node)
+      discovery.relabel "cilium" {
+        targets = discovery.kubernetes.local_pods.targets
+
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+          regex         = "cilium-agent"
+          action        = "keep"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          target_label  = "namespace"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label  = "pod"
         }
       }
 
       prometheus.scrape "cilium" {
-        targets    = discovery.kubernetes.cilium.targets
+        targets    = discovery.relabel.cilium.output
         forward_to = [prometheus.remote_write.victoriametrics.receiver]
       }
 
-      // Scrape Hubble metrics
-      discovery.kubernetes "hubble" {
-        role = "pod"
-        namespaces {
-          names = ["kube-system"]
+      // Hubble metrics (exposed on Cilium agent pods, port 9965)
+      discovery.relabel "hubble" {
+        targets = discovery.kubernetes.local_pods.targets
+
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+          regex         = "cilium-agent"
+          action        = "keep"
         }
-        selectors {
-          role  = "pod"
-          label = "app.kubernetes.io/name=hubble"
+        rule {
+          source_labels = ["__meta_kubernetes_pod_ip"]
+          target_label  = "__address__"
+          replacement   = "$1:9965"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          target_label  = "namespace"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label  = "pod"
         }
       }
 
       prometheus.scrape "hubble" {
-        targets    = discovery.kubernetes.hubble.targets
+        targets    = discovery.relabel.hubble.output
         forward_to = [prometheus.remote_write.victoriametrics.receiver]
       }
 
-      // Remote write to VictoriaMetrics
       prometheus.remote_write "victoriametrics" {
         endpoint {
           url = "http://vmsingle-vm-stack-victoria-metrics-k8s-stack.monitoring.svc:8428/api/v1/write"
@@ -125,10 +149,9 @@ alloy:
       }
 
       // ============================================================
-      // LOGS — collect from all pods and push to Loki
+      // LOGS — collect from all local pods and push to Loki
       // ============================================================
 
-      // Discover pod logs
       discovery.kubernetes "pod_logs" {
         role = "pod"
       }
@@ -163,7 +186,6 @@ alloy:
         forward_to = [loki.process.pipeline.receiver]
       }
 
-      // Basic log processing — drop empty lines, parse JSON if present
       loki.process "pipeline" {
         stage.drop {
           expression = "^\\s*$"

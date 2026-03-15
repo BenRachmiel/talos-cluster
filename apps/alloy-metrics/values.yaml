@@ -1,0 +1,233 @@
+# Grafana Alloy (StatefulSet) — cluster-wide metric scraping
+# Handles: kube-state-metrics, annotation-based pods, VM components
+
+alloy:
+  clustering:
+    enabled: true
+  configMap:
+    content: |
+      // ============================================================
+      // CLUSTER-WIDE METRICS — annotation-based + dedicated targets
+      // ============================================================
+
+      // Discover all pods with prometheus.io/scrape annotation
+      discovery.kubernetes "pods" {
+        role = "pod"
+      }
+
+      discovery.relabel "pod_metrics" {
+        targets = discovery.kubernetes.pods.targets
+
+        rule {
+          source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_scrape"]
+          regex         = "true"
+          action        = "keep"
+        }
+        // Exclude node-exporter — scraped by the DaemonSet
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+          regex         = "prometheus-node-exporter"
+          action        = "drop"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_path"]
+          target_label  = "__metrics_path__"
+          regex         = "(.+)"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_port", "__meta_kubernetes_pod_ip"]
+          regex         = "(\\d+);(.*)"
+          target_label  = "__address__"
+          replacement   = "$2:$1"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          target_label  = "namespace"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label  = "pod"
+        }
+      }
+
+      prometheus.scrape "pod_metrics" {
+        targets    = discovery.relabel.pod_metrics.output
+        forward_to = [prometheus.remote_write.victoriametrics.receiver]
+        clustering {
+          enabled = true
+        }
+      }
+
+      // ============================================================
+      // VM COMPONENTS — dedicated scrape targets
+      // ============================================================
+
+      // VMSingle
+      discovery.kubernetes "vmsingle" {
+        role = "pod"
+        namespaces {
+          names = ["monitoring"]
+        }
+        selectors {
+          role  = "pod"
+          label = "app.kubernetes.io/name=vmsingle"
+        }
+      }
+
+      discovery.relabel "vmsingle" {
+        targets = discovery.kubernetes.vmsingle.targets
+        rule {
+          target_label = "__address__"
+          replacement  = "vmsingle-vm-stack-victoria-metrics-k8s-stack.monitoring.svc:8428"
+        }
+        rule {
+          target_label = "namespace"
+          replacement  = "monitoring"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label  = "pod"
+        }
+      }
+
+      prometheus.scrape "vmsingle" {
+        targets    = discovery.relabel.vmsingle.output
+        forward_to = [prometheus.remote_write.victoriametrics.receiver]
+        clustering {
+          enabled = true
+        }
+      }
+
+      // VM Operator
+      discovery.kubernetes "vm_operator" {
+        role = "pod"
+        namespaces {
+          names = ["monitoring"]
+        }
+        selectors {
+          role  = "pod"
+          label = "app.kubernetes.io/name=victoria-metrics-operator"
+        }
+      }
+
+      discovery.relabel "vm_operator" {
+        targets = discovery.kubernetes.vm_operator.targets
+        rule {
+          source_labels = ["__meta_kubernetes_pod_ip"]
+          target_label  = "__address__"
+          replacement   = "$1:8080"
+        }
+        rule {
+          target_label = "namespace"
+          replacement  = "monitoring"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label  = "pod"
+        }
+      }
+
+      prometheus.scrape "vm_operator" {
+        targets    = discovery.relabel.vm_operator.output
+        forward_to = [prometheus.remote_write.victoriametrics.receiver]
+        clustering {
+          enabled = true
+        }
+      }
+
+      // VMAlert
+      discovery.kubernetes "vmalert" {
+        role = "pod"
+        namespaces {
+          names = ["monitoring"]
+        }
+        selectors {
+          role  = "pod"
+          label = "app.kubernetes.io/name=vmalert"
+        }
+      }
+
+      discovery.relabel "vmalert" {
+        targets = discovery.kubernetes.vmalert.targets
+        rule {
+          source_labels = ["__meta_kubernetes_pod_ip"]
+          target_label  = "__address__"
+          replacement   = "$1:8080"
+        }
+        rule {
+          target_label = "namespace"
+          replacement  = "monitoring"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label  = "pod"
+        }
+      }
+
+      prometheus.scrape "vmalert" {
+        targets    = discovery.relabel.vmalert.output
+        forward_to = [prometheus.remote_write.victoriametrics.receiver]
+        clustering {
+          enabled = true
+        }
+      }
+
+      // Alertmanager
+      discovery.kubernetes "alertmanager" {
+        role = "pod"
+        namespaces {
+          names = ["monitoring"]
+        }
+        selectors {
+          role  = "pod"
+          label = "app.kubernetes.io/name=vmalertmanager"
+        }
+      }
+
+      discovery.relabel "alertmanager" {
+        targets = discovery.kubernetes.alertmanager.targets
+        rule {
+          source_labels = ["__meta_kubernetes_pod_ip"]
+          target_label  = "__address__"
+          replacement   = "$1:9093"
+        }
+        rule {
+          target_label = "namespace"
+          replacement  = "monitoring"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label  = "pod"
+        }
+      }
+
+      prometheus.scrape "alertmanager" {
+        targets    = discovery.relabel.alertmanager.output
+        forward_to = [prometheus.remote_write.victoriametrics.receiver]
+        clustering {
+          enabled = true
+        }
+      }
+
+      // Remote write to VictoriaMetrics
+      prometheus.remote_write "victoriametrics" {
+        endpoint {
+          url = "http://vmsingle-vm-stack-victoria-metrics-k8s-stack.monitoring.svc:8428/api/v1/write"
+        }
+      }
+
+controller:
+  type: statefulset
+  replicas: 2
+  resources:
+    limits:
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+
+serviceAccount:
+  create: true
+
+rbac:
+  create: true
