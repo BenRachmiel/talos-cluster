@@ -5,8 +5,8 @@ metadata:
   namespace: navidrome
 spec:
   accessModes:
-    - ReadWriteOnce
-  storageClassName: ceph-rbd
+    - ReadWriteMany
+  storageClassName: cephfs
   resources:
     requests:
       storage: 5Gi
