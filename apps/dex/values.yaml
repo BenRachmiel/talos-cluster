@@ -28,6 +28,11 @@ config:
       secretEnv: GRAFANA_CLIENT_SECRET
       redirectURIs:
         - https://grafana.k8s.benrachmiel.org/login/generic_oauth
+    - id: music-downloader
+      name: Music Downloader
+      secretEnv: MUSIC_DOWNLOADER_CLIENT_SECRET
+      redirectURIs:
+        - https://downloader.k8s.benrachmiel.org/oauth2/callback
 
 envFrom:
   - secretRef:
