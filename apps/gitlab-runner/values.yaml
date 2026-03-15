@@ -37,8 +37,12 @@ extraObjects:
       target:
         name: gitlab-runner-token
         creationPolicy: Owner
+        template:
+          data:
+            runner-registration-token: ""
+            runner-token: "{{ .token }}"
       data:
-        - secretKey: runner-token
+        - secretKey: token
           remoteRef:
             conversionStrategy: Default
             decodingStrategy: None
