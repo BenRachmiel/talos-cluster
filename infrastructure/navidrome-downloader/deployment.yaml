@@ -21,7 +21,7 @@ spec:
         - name: gitlab-registry
       containers:
         - name: music-downloader
-          image: gitlab.benrachmiel.org:5050/bvf2104/music-downloader-from-csv:latest
+          image: gitlab.benrachmiel.org:5050/bvf2104/music-downloader-from-csv:aabd7fd0b9cd8f759bd5d6f1f74b54e29ebea20a
           imagePullPolicy: Always
           env:
             - name: NAVIDROME_USER
