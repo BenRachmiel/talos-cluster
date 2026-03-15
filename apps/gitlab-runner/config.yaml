@@ -1,0 +1,5 @@
+name: gitlab-runner
+repoURL: https://charts.gitlab.io
+chart: gitlab-runner
+chartVersion: 0.86.0
+targetNamespace: gitlab-runner

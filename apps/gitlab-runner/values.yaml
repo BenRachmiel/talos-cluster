@@ -1,0 +1,47 @@
+gitlabUrl: https://gitlab.benrachmiel.org
+concurrent: 5
+
+rbac:
+  create: true
+
+runners:
+  secret: gitlab-runner-token
+  config: |
+    [[runners]]
+      [runners.kubernetes]
+        namespace = "gitlab-runner"
+        image = "alpine:latest"
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    memory: 256Mi
+
+extraObjects:
+  - apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: gitlab-runner
+  - apiVersion: external-secrets.io/v1
+    kind: ExternalSecret
+    metadata:
+      name: gitlab-runner-token
+      namespace: gitlab-runner
+    spec:
+      refreshInterval: 1h
+      secretStoreRef:
+        kind: ClusterSecretStore
+        name: vault
+      target:
+        name: gitlab-runner-token
+        creationPolicy: Owner
+      data:
+        - secretKey: runner-token
+          remoteRef:
+            conversionStrategy: Default
+            decodingStrategy: None
+            key: gitlab/runner
+            metadataPolicy: None
+            property: token
