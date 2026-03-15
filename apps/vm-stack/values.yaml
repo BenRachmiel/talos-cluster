@@ -84,6 +84,12 @@ grafana:
       access: proxy
       isDefault: false
 
+# --- VM Operator — use cert-manager for webhook TLS ---
+victoria-metrics-operator:
+  admissionWebhooks:
+    certManager:
+      enabled: true
+
 # --- Disable bundled components replaced by Alloy ---
 prometheus:
   enabled: false
