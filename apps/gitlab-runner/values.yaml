@@ -40,7 +40,7 @@ extraObjects:
         template:
           data:
             runner-registration-token: ""
-            runner-token: "{{ .token }}"
+            runner-token: "{{ `{{ .token }}` }}"
       data:
         - secretKey: token
           remoteRef:
