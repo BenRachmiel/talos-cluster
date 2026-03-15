@@ -38,7 +38,6 @@ spec:
             capabilities:
               drop:
                 - ALL
-            runAsNonRoot: true
           resources:
             requests:
               cpu: 50m
