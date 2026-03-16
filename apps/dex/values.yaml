@@ -33,6 +33,11 @@ config:
       secretEnv: MUSIC_DOWNLOADER_CLIENT_SECRET
       redirectURIs:
         - https://downloader.k8s.benrachmiel.org/oauth2/callback
+    - id: preamp
+      name: Preamp
+      secretEnv: PREAMP_CLIENT_SECRET
+      redirectURIs:
+        - https://preamp.k8s.benrachmiel.org/manage/callback
 
 envFrom:
   - secretRef:
