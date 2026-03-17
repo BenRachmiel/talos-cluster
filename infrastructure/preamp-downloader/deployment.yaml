@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: music-downloader
-  namespace: navidrome
+  namespace: pedals
   labels:
     app: music-downloader
 spec:
@@ -23,14 +23,6 @@ spec:
         - name: music-downloader
           image: gitlab.benrachmiel.org:5050/bvf2104/music-downloader-from-csv:37b5ec655b14ca5f97f7a07edab2170cd48a57f5
           imagePullPolicy: Always
-          env:
-            - name: NAVIDROME_USER
-              value: admin
-            - name: NAVIDROME_PASS
-              valueFrom:
-                secretKeyRef:
-                  name: navidrome-api
-                  key: password
           ports:
             - containerPort: 8080
           volumeMounts:
@@ -91,4 +83,4 @@ spec:
       volumes:
         - name: music
           persistentVolumeClaim:
-            claimName: navidrome-music
+            claimName: preamp-music
