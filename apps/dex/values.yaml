@@ -37,7 +37,7 @@ config:
       name: Preamp
       secretEnv: PREAMP_CLIENT_SECRET
       redirectURIs:
-        - https://preamp.k8s.benrachmiel.org/manage/callback
+        - https://preamp.k8s.benrachmiel.org/oauth2/callback
 
 envFrom:
   - secretRef:
