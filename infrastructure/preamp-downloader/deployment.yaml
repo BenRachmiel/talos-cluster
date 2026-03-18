@@ -20,11 +20,46 @@ spec:
       imagePullSecrets:
         - name: gitlab-registry
       containers:
-        - name: music-downloader
-          image: gitlab.benrachmiel.org:5050/bvf2104/music-downloader-from-csv:37b5ec655b14ca5f97f7a07edab2170cd48a57f5
+        - name: frontend
+          image: gitlab.benrachmiel.org:5050/bvf2104/music-downloader-from-csv/frontend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            runAsNonRoot: true
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+        - name: backend
+          image: gitlab.benrachmiel.org:5050/bvf2104/music-downloader-from-csv/backend:latest
+          imagePullPolicy: Always
+          env:
+            - name: BIND_ADDR
+              value: "0.0.0.0:3000"
+            - name: MAX_CONCURRENT
+              value: "4"
+            - name: NAVIDROME_URL
+              value: "http://navidrome.pedals.svc:4533"
+            - name: NAVIDROME_USER
+              valueFrom:
+                secretKeyRef:
+                  name: navidrome-api
+                  key: username
+                  optional: true
+            - name: NAVIDROME_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: navidrome-api
+                  key: password
+                  optional: true
           volumeMounts:
             - name: music
               mountPath: /music
@@ -36,11 +71,11 @@ spec:
             runAsNonRoot: true
           resources:
             requests:
-              cpu: 50m
-              memory: 64Mi
+              cpu: 100m
+              memory: 128Mi
             limits:
-              cpu: 500m
-              memory: 256Mi
+              cpu: 1000m
+              memory: 512Mi
         - name: oauth2-proxy
           image: quay.io/oauth2-proxy/oauth2-proxy:latest
           args:
