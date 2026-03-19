@@ -21,7 +21,7 @@ spec:
         - name: gitlab-registry
       containers:
         - name: frontend
-          image: gitlab.benrachmiel.org:5050/bvf2104/music-downloader-from-csv/frontend:edd70f6b44b2465e6a9b07cde537e83d4966add2
+          image: gitlab.benrachmiel.org:5050/bvf2104/music-downloader-from-csv/frontend:8e032ce355cfa0b4a6a4d8debe257047024b0de4
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -39,7 +39,7 @@ spec:
               cpu: 100m
               memory: 64Mi
         - name: backend
-          image: gitlab.benrachmiel.org:5050/bvf2104/music-downloader-from-csv/backend:edd70f6b44b2465e6a9b07cde537e83d4966add2
+          image: gitlab.benrachmiel.org:5050/bvf2104/music-downloader-from-csv/backend:8e032ce355cfa0b4a6a4d8debe257047024b0de4
           imagePullPolicy: Always
           env:
             - name: BIND_ADDR
