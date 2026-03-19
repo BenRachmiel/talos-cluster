@@ -46,20 +46,6 @@ spec:
               value: "0.0.0.0:3000"
             - name: MAX_CONCURRENT
               value: "4"
-            - name: NAVIDROME_URL
-              value: "http://navidrome.pedals.svc:4533"
-            - name: NAVIDROME_USER
-              valueFrom:
-                secretKeyRef:
-                  name: navidrome-api
-                  key: username
-                  optional: true
-            - name: NAVIDROME_PASS
-              valueFrom:
-                secretKeyRef:
-                  name: navidrome-api
-                  key: password
-                  optional: true
           volumeMounts:
             - name: music
               mountPath: /music
