@@ -11,6 +11,9 @@ ui:
     extraArgs:
       - --email-domain=*
 
+config:
+  collectorTokenEnabled: true
+
 gateway:
   enabled: true
   host: preamp.k8s.benrachmiel.org
@@ -51,3 +54,7 @@ extraObjects:
             property: oauth2-cookie-secret
             decodingStrategy: None
           secretKey: OAUTH2_PROXY_COOKIE_SECRET
+        - remoteRef:
+            key: preamp/secrets
+            property: collector-token
+          secretKey: PREAMP_COLLECTOR_TOKEN
