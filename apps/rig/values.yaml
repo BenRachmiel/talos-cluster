@@ -1,0 +1,125 @@
+image:
+  tag: sha-0000000
+
+oauthProxy:
+  issuerURL: https://dex.k8s.benrachmiel.org
+  clientID: rig
+  redirectURL: https://rig.k8s.benrachmiel.org/oauth2/callback
+  cookieName: _oauth2_proxy_rig
+  extraArgs:
+    - --skip-provider-button=true
+
+gateway:
+  enabled: true
+  host: rig.k8s.benrachmiel.org
+
+persistence:
+  music:
+    storageClass: cephfs
+
+secrets:
+  existingSecret: rig-secrets
+
+# --- Sub-chart overrides ---
+
+preamp:
+  enabled: true
+  image:
+    tag: sha-2c1aaf3
+  ui:
+    enabled: false
+  config:
+    collectorTokenEnabled: true
+  devCredentials:
+    username: unused
+    password: unused
+  secrets:
+    existingSecret: rig-preamp-secrets
+  persistence:
+    music:
+      existingClaim: rig-music
+    data:
+      storageClass: ceph-rbd
+
+gain-downloader:
+  enabled: true
+  image:
+    backend:
+      repository: ghcr.io/benrachmiel/gain/images/backend
+      tag: sha-db2fe54
+  frontend:
+    enabled: false
+  oauthProxy:
+    enabled: false
+  secrets:
+    existingSecret: rig-gain-secrets
+  persistence:
+    music:
+      existingClaim: rig-music
+
+extraObjects:
+  - apiVersion: external-secrets.io/v1
+    kind: ExternalSecret
+    metadata:
+      name: rig-secrets
+    spec:
+      refreshInterval: 1h
+      secretStoreRef:
+        kind: ClusterSecretStore
+        name: vault
+      target:
+        name: rig-secrets
+        deletionPolicy: Retain
+      data:
+        - secretKey: OAUTH2_PROXY_CLIENT_SECRET
+          remoteRef:
+            key: rig/secrets
+            property: oauth2-client-secret
+        - secretKey: OAUTH2_PROXY_COOKIE_SECRET
+          remoteRef:
+            key: rig/secrets
+            property: oauth2-cookie-secret
+
+  - apiVersion: external-secrets.io/v1
+    kind: ExternalSecret
+    metadata:
+      name: rig-preamp-secrets
+    spec:
+      refreshInterval: 1h
+      secretStoreRef:
+        kind: ClusterSecretStore
+        name: vault
+      target:
+        name: rig-preamp-secrets
+        deletionPolicy: Retain
+      data:
+        - secretKey: PREAMP_ENCRYPTION_KEY
+          remoteRef:
+            key: preamp/secrets
+            property: encryption-key
+        - secretKey: PREAMP_COLLECTOR_TOKEN
+          remoteRef:
+            key: preamp/secrets
+            property: collector-token
+
+  - apiVersion: external-secrets.io/v1
+    kind: ExternalSecret
+    metadata:
+      name: rig-gain-secrets
+    spec:
+      refreshInterval: 1h
+      secretStoreRef:
+        kind: ClusterSecretStore
+        name: vault
+      target:
+        name: rig-gain-secrets
+        deletionPolicy: Retain
+      data:
+        - secretKey: SOURCE_API
+          remoteRef:
+            key: preamp/sources
+            property: source-api
+        - secretKey: SOURCE_MIRRORS
+          remoteRef:
+            key: preamp/sources
+            property: source-mirrors
