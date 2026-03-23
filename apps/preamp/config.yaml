@@ -1,5 +1,5 @@
 name: preamp
 repoURL: ghcr.io/benrachmiel/preamp/charts
 chart: preamp
-chartVersion: 0.1.0
+chartVersion: 0.1.1
 targetNamespace: pedals
