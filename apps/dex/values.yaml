@@ -38,6 +38,11 @@ config:
       secretEnv: PREAMP_CLIENT_SECRET
       redirectURIs:
         - https://preamp.k8s.benrachmiel.org/oauth2/callback
+    - id: rig
+      name: Rig
+      secretEnv: RIG_CLIENT_SECRET
+      redirectURIs:
+        - https://rig.k8s.benrachmiel.org/oauth2/callback
 
 envFrom:
   - secretRef:
