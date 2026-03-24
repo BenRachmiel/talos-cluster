@@ -1,5 +1,5 @@
 image:
-  tag: sha-8d70ff7
+  tag: sha-02d1e00
 
 oauthProxy:
   issuerURL: https://dex.k8s.benrachmiel.org
@@ -25,7 +25,7 @@ secrets:
 preamp:
   enabled: true
   image:
-    tag: sha-03e9031
+    tag: sha-8cdcfee
   ui:
     enabled: false
   config:
