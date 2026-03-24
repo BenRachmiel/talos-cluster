@@ -25,7 +25,7 @@ secrets:
 preamp:
   enabled: true
   image:
-    tag: sha-77bc2eb
+    tag: sha-7f7b4b8
   ui:
     enabled: false
   config:
