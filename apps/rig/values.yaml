@@ -30,9 +30,6 @@ preamp:
     enabled: false
   config:
     collectorTokenEnabled: true
-  devCredentials:
-    username: unused
-    password: unused
   secrets:
     existingSecret: rig-preamp-secrets
   persistence:
