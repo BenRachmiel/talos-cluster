@@ -1,10 +1,10 @@
 image:
-  tag: sha-77bc2eb
+  tag: sha-7f7b4b8
 
 ui:
   enabled: true
   image:
-    tag: sha-77bc2eb
+    tag: sha-7f7b4b8
   oauthProxy:
     issuerURL: https://dex.k8s.benrachmiel.org
     clientID: preamp
