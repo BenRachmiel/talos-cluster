@@ -1,5 +1,5 @@
 image:
-  tag: sha-44cc82b
+  tag: sha-f260b45
 
 oauthProxy:
   issuerURL: https://dex.k8s.benrachmiel.org
