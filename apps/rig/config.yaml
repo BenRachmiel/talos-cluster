@@ -1,5 +1,5 @@
 name: rig
 repoURL: ghcr.io/benrachmiel/rig/charts
 chart: rig
-chartVersion: 0.1.16
+chartVersion: 0.1.17
 targetNamespace: rig
