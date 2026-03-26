@@ -1,10 +1,10 @@
 image:
   frontend:
     repository: ghcr.io/benrachmiel/gain/images/frontend
-    tag: sha-f3d058a
+    tag: sha-a0d0c8f
   backend:
     repository: ghcr.io/benrachmiel/gain/images/backend
-    tag: sha-f3d058a
+    tag: sha-a0d0c8f
 
 config:
   maxConcurrent: "4"
