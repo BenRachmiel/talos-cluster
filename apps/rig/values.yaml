@@ -1,6 +1,3 @@
-image:
-  tag: sha-4161a4b
-
 oauthProxy:
   issuerURL: https://dex.k8s.benrachmiel.org
   clientID: rig
@@ -24,8 +21,6 @@ secrets:
 
 preamp:
   enabled: true
-  image:
-    tag: sha-3266849
   ui:
     enabled: false
   config:
@@ -40,10 +35,6 @@ preamp:
 
 gain-downloader:
   enabled: true
-  image:
-    backend:
-      repository: ghcr.io/benrachmiel/gain/images/backend
-      tag: sha-db2fe54
   frontend:
     enabled: false
   oauthProxy:
