@@ -1,5 +1,5 @@
 name: gain-downloader
 repoURL: ghcr.io/benrachmiel/gain/charts
 chart: gain-downloader
-chartVersion: 0.2.1
+chartVersion: 0.2.2
 targetNamespace: pedals
