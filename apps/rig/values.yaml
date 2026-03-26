@@ -57,16 +57,23 @@ extraObjects:
         name: vault
       target:
         name: rig-secrets
+        creationPolicy: Owner
         deletionPolicy: Retain
       data:
         - secretKey: OAUTH2_PROXY_CLIENT_SECRET
           remoteRef:
             key: rig/secrets
             property: oauth2-client-secret
+            conversionStrategy: Default
+            decodingStrategy: None
+            metadataPolicy: None
         - secretKey: OAUTH2_PROXY_COOKIE_SECRET
           remoteRef:
             key: rig/secrets
             property: oauth2-cookie-secret
+            conversionStrategy: Default
+            decodingStrategy: None
+            metadataPolicy: None
 
   - apiVersion: external-secrets.io/v1
     kind: ExternalSecret
@@ -79,16 +86,23 @@ extraObjects:
         name: vault
       target:
         name: rig-preamp-secrets
+        creationPolicy: Owner
         deletionPolicy: Retain
       data:
         - secretKey: PREAMP_ENCRYPTION_KEY
           remoteRef:
             key: preamp/secrets
             property: encryption-key
+            conversionStrategy: Default
+            decodingStrategy: None
+            metadataPolicy: None
         - secretKey: PREAMP_COLLECTOR_TOKEN
           remoteRef:
             key: preamp/secrets
             property: collector-token
+            conversionStrategy: Default
+            decodingStrategy: None
+            metadataPolicy: None
 
   - apiVersion: external-secrets.io/v1
     kind: ExternalSecret
@@ -101,13 +115,20 @@ extraObjects:
         name: vault
       target:
         name: rig-gain-secrets
+        creationPolicy: Owner
         deletionPolicy: Retain
       data:
         - secretKey: SOURCE_API
           remoteRef:
             key: preamp/sources
             property: source-api
+            conversionStrategy: Default
+            decodingStrategy: None
+            metadataPolicy: None
         - secretKey: SOURCE_MIRRORS
           remoteRef:
             key: preamp/sources
             property: source-mirrors
+            conversionStrategy: Default
+            decodingStrategy: None
+            metadataPolicy: None

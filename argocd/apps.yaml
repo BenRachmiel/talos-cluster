@@ -39,6 +39,24 @@ spec:
           jsonPointers:
             - /data
             - /stringData
+        - group: ""
+          kind: Secret
+          namespace: kube-system
+          jsonPointers:
+            - /data
+        - group: ""
+          kind: Secret
+          namespace: monitoring
+          name: vm-stack-grafana
+          jsonPointers:
+            - /data
+            - /stringData
+        - group: apps
+          kind: Deployment
+          namespace: monitoring
+          name: vm-stack-grafana
+          jsonPointers:
+            - /spec/template/metadata/annotations/checksum~1secret
         - group: admissionregistration.k8s.io
           kind: ValidatingWebhookConfiguration
           jsonPointers:
