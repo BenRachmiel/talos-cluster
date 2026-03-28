@@ -5,6 +5,9 @@ oauthProxy:
   cookieName: _oauth2_proxy_rig
   extraArgs:
     - --skip-provider-button=true
+    - --skip-auth-route=GET=^/manifest\.json$
+    - --skip-auth-route=GET=^/sw\.js$
+    - --skip-auth-route=GET=^/icon[-.].*\.(png|svg)$
 
 gateway:
   enabled: true
