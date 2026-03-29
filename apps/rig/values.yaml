@@ -9,6 +9,14 @@ oauthProxy:
     - --skip-auth-route=GET=^/sw\.js$
     - --skip-auth-route=GET=^/icon[-.].*\.(png|svg)$
 
+resources:
+  requests:
+    cpu: 1000m
+    memory: 1Gi
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+
 gateway:
   enabled: true
   host: rig.k8s.benrachmiel.org
