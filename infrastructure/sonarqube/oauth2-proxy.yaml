@@ -29,6 +29,8 @@ spec:
             - --email-domain=*
             - --skip-provider-button=true
             - --pass-user-headers=true
+            - --skip-auth-route=^/api/
+            - --skip-auth-route=^/batch/
           envFrom:
             - secretRef:
                 name: sonarqube-oauth-secrets
