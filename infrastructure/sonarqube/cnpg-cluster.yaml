@@ -1,0 +1,17 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: sonarqube-db
+  namespace: sonarqube
+spec:
+  instances: 1
+  enableSuperuserAccess: false
+  storage:
+    storageClass: ceph-rbd
+    size: 10Gi
+  bootstrap:
+    initdb:
+      database: sonarqube
+      owner: sonarqube
+      secret:
+        name: sonarqube-db-credentials

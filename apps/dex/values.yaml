@@ -43,6 +43,11 @@ config:
       secretEnv: RIG_CLIENT_SECRET
       redirectURIs:
         - https://rig.k8s.benrachmiel.org/oauth2/callback
+    - id: sonarqube
+      name: SonarQube
+      secretEnv: SONARQUBE_CLIENT_SECRET
+      redirectURIs:
+        - https://sonarqube.k8s.benrachmiel.org/oauth2/callback
 
 envFrom:
   - secretRef:

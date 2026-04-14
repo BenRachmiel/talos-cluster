@@ -1,0 +1,37 @@
+initSysctl:
+  enabled: false
+
+initFs:
+  enabled: false
+
+jdbcOverwrite:
+  enabled: true
+  jdbcUrl: jdbc:postgresql://sonarqube-db-rw.sonarqube.svc:5432/sonarqube
+  jdbcUsername: sonarqube
+  jdbcSecretName: sonarqube-db-credentials
+  jdbcSecretPasswordKey: password
+
+sonarProperties:
+  sonar.forceAuthentication: "true"
+  sonar.web.sso.enable: "true"
+  sonar.web.sso.loginHeader: X-Forwarded-User
+  sonar.web.sso.emailHeader: X-Forwarded-Email
+  sonar.web.sso.groupsHeader: X-Forwarded-Groups
+
+monitoringPasscode: define_it
+
+ingress:
+  enabled: false
+
+persistence:
+  enabled: true
+  storageClass: ceph-rbd
+  size: 5Gi
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: 2000m
+    memory: 2Gi
