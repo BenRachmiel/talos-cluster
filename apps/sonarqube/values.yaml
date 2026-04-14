@@ -1,3 +1,6 @@
+community:
+  enabled: true
+
 initSysctl:
   enabled: false
 
