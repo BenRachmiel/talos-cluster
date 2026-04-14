@@ -1,5 +1,5 @@
 name: sonarqube
 repoURL: https://SonarSource.github.io/helm-chart-sonarqube
 chart: sonarqube
-chartVersion: "2026.3.0"
+chartVersion: "2026.2.1"
 targetNamespace: sonarqube
