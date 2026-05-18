@@ -1,0 +1,46 @@
+replicas: 1
+
+command:
+  - "/opt/keycloak/bin/kc.sh"
+  - "start"
+  - "--http-enabled=true"
+  - "--http-port=8080"
+  - "--hostname-strict=false"
+  - "--hostname=https://keycloak-test.k8s.benrachmiel.org"
+  - "--proxy-headers=xforwarded"
+
+database:
+  vendor: postgres
+  hostname: keycloak-db-rw.keycloak-test.svc
+  port: 5432
+  database: keycloak
+  username: keycloak
+  existingSecret: keycloak-db-credentials
+  existingSecretKey: password
+
+extraEnvFrom: |
+  - secretRef:
+      name: keycloak-admin-credentials
+
+http:
+  relativePath: "/"
+
+proxy:
+  enabled: true
+  mode: xforwarded
+
+affinity: ""
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 768Mi
+  limits:
+    cpu: 1500m
+    memory: 1536Mi
+
+service:
+  type: ClusterIP
+
+ingress:
+  enabled: false

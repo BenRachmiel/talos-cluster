@@ -1,0 +1,57 @@
+backendStore:
+  databaseMigration: true
+  databaseConnectionCheck: true
+  postgres:
+    enabled: true
+    host: mlflow-db-rw.mlflow.svc
+    port: 5432
+    database: mlflow
+    user: mlflow
+    driver: psycopg2
+  existingDatabaseSecret:
+    name: mlflow-db-credentials
+    usernameKey: username
+    passwordKey: password
+
+artifactRoot:
+  proxiedArtifactStorage: true
+  defaultArtifactsDestination: /mlflow/artifacts
+
+auth:
+  enabled: true
+  appName: basic-auth
+  defaultPermission: READ
+  existingAdminSecret:
+    name: mlflow-admin-credentials
+    usernameKey: username
+    passwordKey: password
+  postgres:
+    enabled: true
+    host: mlflow-db-rw.mlflow.svc
+    port: 5432
+    database: mlflow_auth
+    user: mlflow
+
+extraVolumes:
+  - name: artifacts
+    persistentVolumeClaim:
+      claimName: mlflow-artifacts
+
+extraVolumeMounts:
+  - name: artifacts
+    mountPath: /mlflow/artifacts
+
+service:
+  type: ClusterIP
+  port: 5000
+
+ingress:
+  enabled: false
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 2Gi

@@ -76,6 +76,14 @@ extraObjects:
             property: argocd
 
 controller:
+  # Expose controller metrics (argocd_app_info, sync/health, reconcile) on :8082.
+  # No Prometheus operator here — Alloy discovers via prometheus.io/* pod annotations.
+  metrics:
+    enabled: true
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8082"
+    prometheus.io/path: /metrics
   resources:
     limits:
       memory: 1Gi
@@ -84,6 +92,12 @@ controller:
       memory: 512Mi
 
 server:
+  metrics:
+    enabled: true
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8083"
+    prometheus.io/path: /metrics
   resources:
     limits:
       memory: 256Mi
@@ -92,6 +106,12 @@ server:
       memory: 128Mi
 
 repoServer:
+  metrics:
+    enabled: true
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8084"
+    prometheus.io/path: /metrics
   resources:
     limits:
       memory: 256Mi
@@ -111,6 +131,12 @@ redis:
       memory: 64Mi
 
 applicationSet:
+  metrics:
+    enabled: true
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+    prometheus.io/path: /metrics
   resources:
     limits:
       memory: 128Mi

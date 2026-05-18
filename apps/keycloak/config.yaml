@@ -1,0 +1,5 @@
+name: keycloak
+repoURL: https://codecentric.github.io/helm-charts
+chart: keycloakx
+chartVersion: "7.1.11"
+targetNamespace: keycloak-test

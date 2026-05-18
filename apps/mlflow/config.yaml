@@ -1,0 +1,5 @@
+name: mlflow
+repoURL: https://community-charts.github.io/helm-charts
+chart: mlflow
+chartVersion: "1.8.1"
+targetNamespace: mlflow

@@ -58,6 +58,7 @@ cluster:
       auto-compaction-mode: periodic
       auto-compaction-retention: "5m"
       quota-backend-bytes: "4294967296"  # 4GB — generous for small cluster
+      listen-metrics-urls: http://0.0.0.0:2381  # expose etcd /metrics for Prometheus scraping
 
   controllerManager:
     extraArgs:

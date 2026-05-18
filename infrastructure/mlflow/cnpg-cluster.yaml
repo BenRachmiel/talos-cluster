@@ -1,0 +1,19 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: mlflow-db
+  namespace: mlflow
+spec:
+  instances: 1
+  enableSuperuserAccess: false
+  storage:
+    storageClass: ceph-rbd
+    size: 10Gi
+  bootstrap:
+    initdb:
+      database: mlflow
+      owner: mlflow
+      secret:
+        name: mlflow-db-credentials
+      postInitSQL:
+        - CREATE DATABASE mlflow_auth OWNER mlflow

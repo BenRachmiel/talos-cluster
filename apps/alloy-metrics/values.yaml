@@ -210,6 +210,201 @@ alloy:
         }
       }
 
+      // ============================================================
+      // CONTROL-PLANE COMPONENTS + COREDNS
+      // Talos exposes scheduler/cm/apiserver on 0.0.0.0 (token auth);
+      // etcd needs cluster.etcd.extraArgs.listen-metrics-urls in the
+      // controlplane machineconfig. Job labels match kube-prometheus so
+      // the bundled dashboards and SLO vmrules resolve.
+      // ============================================================
+
+      // kube-apiserver — via the default/kubernetes endpoints
+      discovery.kubernetes "apiserver" {
+        role = "endpoints"
+        namespaces {
+          names = ["default"]
+        }
+      }
+
+      discovery.relabel "apiserver" {
+        targets = discovery.kubernetes.apiserver.targets
+        rule {
+          source_labels = ["__meta_kubernetes_service_name", "__meta_kubernetes_endpoint_port_name"]
+          regex         = "kubernetes;https"
+          action        = "keep"
+        }
+        rule {
+          target_label = "job"
+          replacement  = "apiserver"
+        }
+      }
+
+      prometheus.scrape "apiserver" {
+        targets           = discovery.relabel.apiserver.output
+        scheme            = "https"
+        bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+        tls_config {
+          ca_file     = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+          server_name = "kubernetes.default.svc"
+        }
+        forward_to = [prometheus.remote_write.victoriametrics.receiver]
+        clustering {
+          enabled = true
+        }
+      }
+
+      // kube-scheduler — static pod, secure metrics on :10259
+      discovery.kubernetes "kube_scheduler" {
+        role = "pod"
+        namespaces {
+          names = ["kube-system"]
+        }
+        selectors {
+          role  = "pod"
+          label = "component=kube-scheduler"
+        }
+      }
+
+      discovery.relabel "kube_scheduler" {
+        targets = discovery.kubernetes.kube_scheduler.targets
+        rule {
+          source_labels = ["__meta_kubernetes_pod_ip"]
+          target_label  = "__address__"
+          replacement   = "$1:10259"
+        }
+        rule {
+          target_label = "job"
+          replacement  = "kube-scheduler"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label  = "pod"
+        }
+      }
+
+      prometheus.scrape "kube_scheduler" {
+        targets           = discovery.relabel.kube_scheduler.output
+        scheme            = "https"
+        bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+        tls_config {
+          insecure_skip_verify = true
+        }
+        forward_to = [prometheus.remote_write.victoriametrics.receiver]
+        clustering {
+          enabled = true
+        }
+      }
+
+      // kube-controller-manager — static pod, secure metrics on :10257
+      discovery.kubernetes "kube_controller_manager" {
+        role = "pod"
+        namespaces {
+          names = ["kube-system"]
+        }
+        selectors {
+          role  = "pod"
+          label = "component=kube-controller-manager"
+        }
+      }
+
+      discovery.relabel "kube_controller_manager" {
+        targets = discovery.kubernetes.kube_controller_manager.targets
+        rule {
+          source_labels = ["__meta_kubernetes_pod_ip"]
+          target_label  = "__address__"
+          replacement   = "$1:10257"
+        }
+        rule {
+          target_label = "job"
+          replacement  = "kube-controller-manager"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label  = "pod"
+        }
+      }
+
+      prometheus.scrape "kube_controller_manager" {
+        targets           = discovery.relabel.kube_controller_manager.output
+        scheme            = "https"
+        bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+        tls_config {
+          insecure_skip_verify = true
+        }
+        forward_to = [prometheus.remote_write.victoriametrics.receiver]
+        clustering {
+          enabled = true
+        }
+      }
+
+      // etcd — Talos-managed service; plaintext metrics on the CP node :2381
+      discovery.kubernetes "etcd_nodes" {
+        role = "node"
+      }
+
+      discovery.relabel "etcd" {
+        targets = discovery.kubernetes.etcd_nodes.targets
+        rule {
+          source_labels = ["__meta_kubernetes_node_labelpresent_node_role_kubernetes_io_control_plane"]
+          regex         = "true"
+          action        = "keep"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_node_address_InternalIP"]
+          target_label  = "__address__"
+          replacement   = "$1:2381"
+        }
+        rule {
+          target_label = "job"
+          replacement  = "etcd"
+        }
+      }
+
+      prometheus.scrape "etcd" {
+        targets    = discovery.relabel.etcd.output
+        forward_to = [prometheus.remote_write.victoriametrics.receiver]
+        clustering {
+          enabled = true
+        }
+      }
+
+      // CoreDNS — kube-dns pods, plaintext metrics on :9153
+      discovery.kubernetes "coredns" {
+        role = "pod"
+        namespaces {
+          names = ["kube-system"]
+        }
+        selectors {
+          role  = "pod"
+          label = "k8s-app=kube-dns"
+        }
+      }
+
+      discovery.relabel "coredns" {
+        targets = discovery.kubernetes.coredns.targets
+        rule {
+          source_labels = ["__meta_kubernetes_pod_ip"]
+          target_label  = "__address__"
+          replacement   = "$1:9153"
+        }
+        rule {
+          target_label = "job"
+          replacement  = "coredns"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label  = "pod"
+        }
+      }
+
+      prometheus.scrape "coredns" {
+        targets    = discovery.relabel.coredns.output
+        forward_to = [prometheus.remote_write.victoriametrics.receiver]
+        clustering {
+          enabled = true
+        }
+      }
+
       // Remote write to VictoriaMetrics
       prometheus.remote_write "victoriametrics" {
         endpoint {
