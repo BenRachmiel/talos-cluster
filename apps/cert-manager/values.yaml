@@ -9,6 +9,12 @@ config:
   kind: ControllerConfiguration
   enableGatewayAPI: true
 
+# Use public resolvers for DNS-01 self-checks instead of cluster DNS.
+# Required because the ad.k8s.benrachmiel.org subzone is delegated to Samba
+# and is not visible through CoreDNS (returns SERVFAIL).
+dns01RecursiveNameservers: "1.1.1.1:53,8.8.8.8:53"
+dns01RecursiveNameserversOnly: true
+
 resources:
   limits:
     memory: 128Mi

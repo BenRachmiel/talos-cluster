@@ -17,6 +17,9 @@ spec:
       name: letsencrypt-staging-key
     solvers:
       - dns01:
+          # Follow CNAMEs so delegated subzones (e.g. ad.k8s.benrachmiel.org → Samba)
+          # validate via a TXT record placed in the Cloudflare-managed parent zone.
+          cnameStrategy: Follow
           cloudflare:
             apiTokenSecretRef:
               name: cloudflare-api-token
@@ -34,6 +37,9 @@ spec:
       name: letsencrypt-prod-key
     solvers:
       - dns01:
+          # Follow CNAMEs so delegated subzones (e.g. ad.k8s.benrachmiel.org → Samba)
+          # validate via a TXT record placed in the Cloudflare-managed parent zone.
+          cnameStrategy: Follow
           cloudflare:
             apiTokenSecretRef:
               name: cloudflare-api-token
