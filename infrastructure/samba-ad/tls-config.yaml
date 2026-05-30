@@ -4,8 +4,18 @@ metadata:
   name: samba-ad-tls-config
   namespace: samba-ad
 data:
+  # Mounted at /etc/samba/conf.d/0tls.conf via subPath. The image's smb.conf
+  # template includes conf.d/*.conf, processed alphabetically — so `0` prefix
+  # ensures these overrides land before any others.
   0tls.conf: |
     [global]
+    # LDAPS — use the cert-manager-issued LE cert mounted at /etc/samba/tls/.
     tls enabled = yes
     tls keyfile = /etc/samba/tls/key.pem
     tls certfile = /etc/samba/tls/cert.pem
+
+    # Disable Samba's periodic DNS self-update. We pin A records manually
+    # (Samba would otherwise re-register the pod IP, which is cluster-internal
+    # and unroutable externally). Without this, samba_dnsupdate also throws
+    # a traceback on every boot trying to resolve _msdcs.* via cluster DNS.
+    dns update command = /bin/true
