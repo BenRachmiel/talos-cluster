@@ -8,9 +8,9 @@
 # the ExternalSecret in infrastructure/argocd-repos/), so ArgoCD can pull
 # the private GitLab repo without static credentials in git.
 #
-# targetRevision is `dev` initially because that's the active branch on
-# the gitops repo. Phase 3 migrates the gitops repo to single-branch+overlays
-# on `main`; at that point this should be flipped to `main`.
+# Post-Phase-3: gitops is single-branch on `main` with overlays/dev and
+# overlays/pre-prod. This Application scans apps/ for child Applications
+# (currently comfi-dev and comfi-pre-prod).
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -21,7 +21,7 @@ spec:
   project: default
   source:
     repoURL: https://gitlab.benrachmiel.org/matrix/udp-poc/gitops.git
-    targetRevision: dev
+    targetRevision: main
     path: apps
     directory:
       recurse: false
