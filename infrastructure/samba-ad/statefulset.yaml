@@ -103,6 +103,7 @@ spec:
         - name: tls
           secret:
             secretName: samba-ad-tls
+            defaultMode: 0600
             items:
               - key: tls.crt
                 path: cert.pem
