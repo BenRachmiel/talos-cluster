@@ -1,0 +1,112 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: samba-ad
+  namespace: samba-ad
+spec:
+  serviceName: samba-ad
+  replicas: 1
+  selector:
+    matchLabels:
+      app: samba-ad
+  template:
+    metadata:
+      labels:
+        app: samba-ad
+    spec:
+      hostname: dc
+      subdomain: samba-ad
+      automountServiceAccountToken: false
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: NotIn
+                    values: ["talos-d4d-304"]
+      containers:
+        - name: samba
+          image: instantlinux/samba-dc:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DOMAIN_ACTION
+              value: "provision"
+            - name: REALM
+              value: "AD.K8S.BENRACHMIEL.ORG"
+            - name: DOMAIN
+              value: "ADKBR"
+            - name: DNSFORWARDER
+              value: "1.1.1.1"
+            - name: HOSTIP
+              value: "0.0.0.0"
+            - name: TZ
+              value: "Etc/UTC"
+            - name: ADMIN_PASSWORD_SECRET
+              value: "admin-password"
+          ports:
+            - { name: dns-tcp,      containerPort: 53,  protocol: TCP }
+            - { name: dns-udp,      containerPort: 53,  protocol: UDP }
+            - { name: kerb-tcp,     containerPort: 88,  protocol: TCP }
+            - { name: kerb-udp,     containerPort: 88,  protocol: UDP }
+            - { name: ldap,         containerPort: 389, protocol: TCP }
+            - { name: kpasswd-tcp,  containerPort: 464, protocol: TCP }
+            - { name: kpasswd-udp,  containerPort: 464, protocol: UDP }
+            - { name: ldaps,        containerPort: 636, protocol: TCP }
+          securityContext:
+            capabilities:
+              add:
+                - SYS_ADMIN
+                - NET_ADMIN
+                - SYS_NICE
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/samba
+            - name: etc
+              mountPath: /etc/samba
+            - name: admin-password
+              mountPath: /run/secrets
+              readOnly: true
+          readinessProbe:
+            tcpSocket:
+              port: 389
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 3
+          livenessProbe:
+            tcpSocket:
+              port: 389
+            initialDelaySeconds: 120
+            periodSeconds: 30
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+      volumes:
+        - name: admin-password
+          secret:
+            secretName: samba-ad-admin
+            items:
+              - key: DOMAINPASS
+                path: admin-password
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: ceph-rbd-nvme
+        resources:
+          requests:
+            storage: 5Gi
+    - metadata:
+        name: etc
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: ceph-rbd-nvme
+        resources:
+          requests:
+            storage: 256Mi
