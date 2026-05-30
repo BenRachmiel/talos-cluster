@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: samba-ad-tls-config
+  namespace: samba-ad
+data:
+  0tls.conf: |
+    [global]
+    tls enabled = yes
+    tls keyfile = /etc/samba/tls/key.pem
+    tls certfile = /etc/samba/tls/cert.pem

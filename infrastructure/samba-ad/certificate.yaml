@@ -1,0 +1,22 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: samba-ad-tls
+  namespace: samba-ad
+spec:
+  secretName: samba-ad-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: ad.k8s.benrachmiel.org
+  dnsNames:
+    - ad.k8s.benrachmiel.org
+    - "*.ad.k8s.benrachmiel.org"
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+  privateKey:
+    algorithm: RSA
+    size: 2048
+    rotationPolicy: Always

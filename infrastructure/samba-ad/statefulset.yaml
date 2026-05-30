@@ -67,6 +67,13 @@ spec:
             - name: admin-password
               mountPath: /run/secrets
               readOnly: true
+            - name: tls
+              mountPath: /etc/samba/tls
+              readOnly: true
+            - name: tls-config
+              mountPath: /etc/samba/conf.d/0tls.conf
+              subPath: 0tls.conf
+              readOnly: true
           readinessProbe:
             tcpSocket:
               port: 389
@@ -93,6 +100,17 @@ spec:
             items:
               - key: DOMAINPASS
                 path: admin-password
+        - name: tls
+          secret:
+            secretName: samba-ad-tls
+            items:
+              - key: tls.crt
+                path: cert.pem
+              - key: tls.key
+                path: key.pem
+        - name: tls-config
+          configMap:
+            name: samba-ad-tls-config
   volumeClaimTemplates:
     - metadata:
         name: data
