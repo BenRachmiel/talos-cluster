@@ -1,3 +1,15 @@
+# Certificate for Samba LDAPS.
+#
+# We issue against samba-ldaps.k8s.benrachmiel.org rather than a name under
+# ad.k8s.benrachmiel.org because Samba's internal DNS does not return CNAME
+# records for TXT queries (violates RFC 1034 §3.6.2), which deadlocks ACME
+# DNS-01 validation through the delegated subzone. The parent k8s.benrachmiel.org
+# names live in the Cloudflare zone and validate cleanly.
+#
+# LDAPS clients (COMFI backend) connect to samba-ldaps.k8s.benrachmiel.org:636,
+# which resolves to the same VPS public IP via the existing *.k8s.benrachmiel.org
+# wildcard A record in Cloudflare. Kerberos (SPNEGO) is unaffected — it uses
+# SRV records under the AD realm name and does not need a TLS cert.
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
@@ -8,10 +20,9 @@ spec:
   issuerRef:
     name: letsencrypt-prod
     kind: ClusterIssuer
-  commonName: ad.k8s.benrachmiel.org
+  commonName: samba-ldaps.k8s.benrachmiel.org
   dnsNames:
-    - ad.k8s.benrachmiel.org
-    - "*.ad.k8s.benrachmiel.org"
+    - samba-ldaps.k8s.benrachmiel.org
   usages:
     - digital signature
     - key encipherment
