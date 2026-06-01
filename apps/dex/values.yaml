@@ -17,6 +17,13 @@ config:
         clientID: $GITHUB_CLIENT_ID
         clientSecret: $GITHUB_CLIENT_SECRET
         redirectURI: https://dex.k8s.benrachmiel.org/callback
+        # Only members of the tzevet-ai GitHub org may authenticate.
+        # Applies to every Dex client below (ArgoCD, Grafana, SonarQube, …).
+        orgs:
+          - name: tzevet-ai
+        # Emit org/team membership as group claims (org:team) for downstream
+        # group-based authorization (e.g. SonarQube X-Forwarded-Groups).
+        loadAllGroups: true
   staticClients:
     - id: argo-cd
       name: ArgoCD
