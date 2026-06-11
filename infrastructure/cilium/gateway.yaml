@@ -30,3 +30,29 @@ spec:
       allowedRoutes:
         namespaces:
           from: All
+    # Public apex + www for the portfolio. The edge Envoy (proxy-cloud) passes
+    # any non-gitlab SNI straight through to this gateway (:443 default chain),
+    # so TLS is terminated here. cert-manager's gateway-shim issues a cert into
+    # benrachmiel-org-tls via the letsencrypt-prod DNS-01 (Cloudflare) issuer.
+    - name: https-apex
+      protocol: HTTPS
+      port: 443
+      hostname: "benrachmiel.org"
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: benrachmiel-org-tls
+      allowedRoutes:
+        namespaces:
+          from: All
+    - name: https-www
+      protocol: HTTPS
+      port: 443
+      hostname: "www.benrachmiel.org"
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: benrachmiel-org-tls
+      allowedRoutes:
+        namespaces:
+          from: All

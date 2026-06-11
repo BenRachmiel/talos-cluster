@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: portfolio
+  namespace: portfolio
+  labels:
+    app: portfolio
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: portfolio
+  template:
+    metadata:
+      labels:
+        app: portfolio
+    spec:
+      # gitlab-registry dockerconfigjson secret is created out-of-band in the
+      # cluster (not in this public repo) — kubectl-created from a GitLab token,
+      # same runtime shape as matrix-dev/pre-prod. Recreate to rotate.
+      imagePullSecrets:
+        - name: gitlab-registry
+      containers:
+        - name: portfolio
+          image: gitlab.benrachmiel.org:5050/bvf2104/portfolio:latest
+          # :latest is mutable (CI re-pushes it) — Always so rollouts pick up new builds.
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 20
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 101
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
