@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: liba-portfolio
+  namespace: liba-portfolio
+  labels:
+    app: liba-portfolio
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: liba-portfolio
+  template:
+    metadata:
+      labels:
+        app: liba-portfolio
+    spec:
+      # Public GHCR image — no imagePullSecrets needed.
+      containers:
+        - name: liba-portfolio
+          # SHA-pinned tag is immutable, so IfNotPresent + pin the tag to roll.
+          image: ghcr.io/benrachmiel/liba-portfolio:sha-9435444
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          # Static SPA — no /healthz, so probe the root like the image's own
+          # HEALTHCHECK does.
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 20
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 101
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi

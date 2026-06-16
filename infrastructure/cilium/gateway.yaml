@@ -56,3 +56,17 @@ spec:
       allowedRoutes:
         namespaces:
           from: All
+    # liba.benrachmiel.org — public subdomain outside the *.k8s wildcard.
+    # cert-manager's gateway-shim issues liba-benrachmiel-org-tls via the
+    # letsencrypt-prod DNS-01 (Cloudflare) issuer from the listener hostname.
+    - name: https-liba
+      protocol: HTTPS
+      port: 443
+      hostname: "liba.benrachmiel.org"
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: liba-benrachmiel-org-tls
+      allowedRoutes:
+        namespaces:
+          from: All

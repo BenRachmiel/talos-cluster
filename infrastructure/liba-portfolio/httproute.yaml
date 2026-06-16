@@ -1,0 +1,18 @@
+# liba.benrachmiel.org — public subdomain (not under the *.k8s wildcard).
+# TLS is terminated at main-gateway by the https-liba listener; the edge Envoy
+# (proxy-cloud) passes the non-gitlab SNI straight through.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: liba-portfolio
+  namespace: liba-portfolio
+spec:
+  parentRefs:
+    - name: main-gateway
+      namespace: kube-system
+  hostnames:
+    - "liba.benrachmiel.org"
+  rules:
+    - backendRefs:
+        - name: liba-portfolio
+          port: 80

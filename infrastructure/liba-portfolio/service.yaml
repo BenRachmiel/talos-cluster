@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: liba-portfolio
+  namespace: liba-portfolio
+spec:
+  selector:
+    app: liba-portfolio
+  ports:
+    - port: 80
+      targetPort: 8080
