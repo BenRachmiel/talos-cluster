@@ -13,12 +13,15 @@ vmsingle:
       resources:
         requests:
           storage: 20Gi
+    # ~1.8B rows at 14d retention OOMKilled at 512Mi (VM sizes caches to 60% of
+    # the limit and caps -search.maxUniqueTimeseries to fit remaining memory,
+    # which surfaced as 400s on heavy Grafana /api/ds/query calls).
     resources:
       limits:
-        memory: 512Mi
+        memory: 2Gi
       requests:
         cpu: 100m
-        memory: 256Mi
+        memory: 1Gi
 
 # --- VMAgent disabled — Alloy handles metric collection ---
 vmagent:

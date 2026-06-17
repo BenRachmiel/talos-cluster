@@ -1,0 +1,13 @@
+# metrics-server — kubelet serving certs are CA-signed thanks to Talos
+# rotate-server-certificates + the kubelet-serving-cert-approver (see
+# infrastructure/kubelet-serving-cert-approver/), so NO --kubelet-insecure-tls
+# is needed. The chart's default args (InternalIP preferred, node-status-port)
+# are correct for Talos.
+replicas: 1
+
+resources:
+  requests:
+    cpu: 25m
+    memory: 64Mi
+  limits:
+    memory: 128Mi
