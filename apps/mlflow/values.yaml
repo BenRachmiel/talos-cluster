@@ -30,7 +30,13 @@ auth:
     host: mlflow-db-rw.mlflow.svc
     port: 5432
     database: mlflow_auth
-    user: mlflow
+    # Same CNPG cluster/role as backendStore, so reuse the DB credentials
+    # secret. Without this the chart requires an inline auth.postgres.password
+    # and fails to template.
+    existingSecret:
+      name: mlflow-db-credentials
+      usernameKey: username
+      passwordKey: password
 
 extraVolumes:
   - name: artifacts

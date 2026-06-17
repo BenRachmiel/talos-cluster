@@ -17,6 +17,11 @@ spec:
   template:
     metadata:
       name: "infra-{{ .path.basename }}"
+      annotations:
+        # Diff against a server-side-apply dry-run so API-server/CRD-defaulted
+        # fields (e.g. ExternalSecret's conversionStrategy, decodingStrategy,
+        # target.deletionPolicy, template.engineVersion) don't read as drift.
+        argocd.argoproj.io/compare-options: ServerSideDiff=true
     spec:
       project: default
       source:
@@ -26,6 +31,18 @@ spec:
       destination:
         server: https://kubernetes.default.svc
         namespace: kube-system
+      # restartedAt is operational residue from `kubectl rollout restart`; it
+      # legitimately lives outside git, so ignore it rather than reverting
+      # (which would force a needless pod rollout).
+      ignoreDifferences:
+        - group: apps
+          kind: StatefulSet
+          jqPathExpressions:
+            - '.spec.template.metadata.annotations."kubectl.kubernetes.io/restartedAt"'
+        - group: apps
+          kind: Deployment
+          jqPathExpressions:
+            - '.spec.template.metadata.annotations."kubectl.kubernetes.io/restartedAt"'
       syncPolicy:
         automated:
           prune: true
