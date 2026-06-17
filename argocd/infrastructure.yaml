@@ -28,6 +28,11 @@ spec:
         repoURL: https://github.com/BenRachmiel/talos-cluster.git
         targetRevision: main
         path: "{{ .path.path }}"
+        # Recurse so manifests in subdirectories are applied too — e.g.
+        # infrastructure/monitoring/dashboards/*.yaml (Grafana dashboard
+        # ConfigMaps). Without this they were silently never deployed.
+        directory:
+          recurse: true
       destination:
         server: https://kubernetes.default.svc
         namespace: kube-system
